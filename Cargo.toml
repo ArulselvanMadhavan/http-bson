@@ -1,0 +1,9 @@
+[package]
+name = "actix"
+version = "0.1.0"
+authors = ["Arulselvan Madhavan <arulselvan1234@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "0.7"
+listenfd = "0.3"

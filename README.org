@@ -1,0 +1,3 @@
+* Http-bson
+** Goals
+   - Provide a graphql interface over bson files

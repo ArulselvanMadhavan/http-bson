@@ -1,9 +1,16 @@
 [package]
-name = "actix"
+name = "http-bson"
 version = "0.1.0"
 authors = ["Arulselvan Madhavan <arulselvan1234@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+actix = "0.8.1"
 actix-web = "0.7"
 listenfd = "0.3"
+serde = "1.0.90"
+serde_json = "1.0.39"
+serde_derive = "1.0.39"
+failure="0.1.5"
+[dev-dependencies]
+racer = "2.1.22"

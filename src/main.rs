@@ -1,20 +1,16 @@
+extern crate actix;
 extern crate actix_web;
-extern crate listenfd;
-
-use actix_web::{server, App, HttpRequest};
-use listenfd::ListenFd;
+extern crate serde;
+extern crate serde_json;
+use actix_web::*;
 
 fn index(_req: &HttpRequest) -> &'static str {
-    "Hello world by Arul!"
+    "Hello World!"
 }
 
 fn main() {
-    let mut listenfd = ListenFd::from_env();
-    let mut server = server::new(|| App::new().resource("/", |r| r.f(index)));
-    server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
-        server.listen(l)
-    } else {
-        server.bind("127.0.0.1:3000").unwrap()
-    };
-    server.run()
+    server::new(|| App::new().resource("/", |r| r.f(index)))
+        .bind("127.0.0.1:8088")
+        .unwrap()
+        .run();
 }

@@ -15,15 +15,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 
-// fn index(info: Path<(String, u32)>) -> String {
-//     format!("Hello {}! id:{}", info.0, info.1)
-// }
-fn index(bt: Option<BaseTemplate>) -> impl Responder {
-    bt.expect("Stupid effin actix")
-}
-
-fn get_base_template(hs: &HashMap<ObjectId, Document>) -> Option<BaseTemplate> {
-    let oid = ObjectId::with_string("57d0c3f3f6cd4530aa50ea18").expect("F U");
+fn get_base_template(hs: &'static HashMap<ObjectId, Document>, oid: &str) -> Option<BaseTemplate> {
+    let oid = ObjectId::with_string(oid).expect("F U");
     let doc = hs.get(&oid).expect("Effing doc is missing in hash map");
     let bt = match (doc.get_object_id("_id"), doc.get_str("name")) {
         (Ok(oid), Ok(name)) => Some(BaseTemplate {
@@ -34,6 +27,7 @@ fn get_base_template(hs: &HashMap<ObjectId, Document>) -> Option<BaseTemplate> {
     };
     bt
 }
+
 #[derive(Serialize, Debug, Clone)]
 struct BaseTemplate {
     id: String, // Move them to references
@@ -52,6 +46,12 @@ impl Responder for BaseTemplate {
     }
 }
 
+fn find_and_return(
+    hs: &'static HashMap<ObjectId, Document>,
+) -> impl Fn(Path<(String, String)>) -> BaseTemplate {
+    move |info| get_base_template(hs, info.1.as_str()).expect("Not found")
+}
+
 fn main() -> () {
     lazy_static! {
         static ref HASHMAP: HashMap<ObjectId, Document> = {
@@ -65,12 +65,10 @@ fn main() -> () {
             hs
         };
     }
-    lazy_static! {
-        static ref SAMPLE_BASETEMPLATE: Option<BaseTemplate> = get_base_template(&HASHMAP);
-    }
+
     server::new(|| {
         App::new().resource("/{collectionName}/{id}", |r| {
-            r.f(|_req| index(SAMPLE_BASETEMPLATE.clone()))
+            r.with(find_and_return(&HASHMAP))
         })
     })
     .bind("127.0.0.1:8088")

@@ -51,7 +51,7 @@ fn find_and_return(
 ) -> impl Fn(Path<(String, String)>) -> BaseTemplate {
     move |info| get_base_template(hs, info.1.as_str()).expect("Not found")
 }
-
+// Sample: 57d0c3f3f6cd4530aa50ea18
 fn main() -> () {
     lazy_static! {
         static ref HASHMAP: HashMap<ObjectId, Document> = {

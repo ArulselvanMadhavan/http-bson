@@ -2,6 +2,7 @@ extern crate actix;
 extern crate actix_web;
 extern crate bson;
 extern crate im;
+extern crate listenfd;
 extern crate serde;
 extern crate serde_json;
 use actix_web::error::Result;
@@ -9,6 +10,7 @@ use actix_web::*;
 use bson::oid::ObjectId;
 use bson::Document;
 use im::hashmap::HashMap;
+use listenfd::ListenFd;
 use std::fs::File;
 
 #[macro_use]
@@ -37,6 +39,7 @@ impl error::ResponseError for AppError {
         }
     }
 }
+
 fn get_base_template(
     hs: &'static HashMap<ObjectId, Document>,
     oid: &str,
@@ -79,6 +82,7 @@ fn find_and_return(
 
 // Sample: 57d0c3f3f6cd4530aa50ea18
 fn main() -> () {
+    let mut listenfd = ListenFd::from_env();
     lazy_static! {
         static ref HASHMAP: HashMap<ObjectId, Document> = {
             let mut f = File::open("samples/base_templates.bson").unwrap();
@@ -92,12 +96,15 @@ fn main() -> () {
         };
     }
 
-    server::new(|| {
+    let mut server = server::new(|| {
         App::new().resource("/{collectionName}/{id}", |r| {
             r.with(find_and_return(&HASHMAP))
         })
-    })
-    .bind("127.0.0.1:8088")
-    .unwrap()
-    .run();
+    });
+    server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
+        server.listen(l)
+    } else {
+        server.bind("127.0.0.1:8088").unwrap()
+    };
+    server.run();
 }

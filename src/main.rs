@@ -1,10 +1,3 @@
-extern crate actix;
-extern crate actix_web;
-extern crate bson;
-extern crate im;
-extern crate listenfd;
-extern crate serde;
-extern crate serde_json;
 use actix_web::error::Result;
 use actix_web::*;
 use bson::oid::ObjectId;
@@ -20,59 +13,10 @@ extern crate lazy_static;
 #[macro_use]
 extern crate failure;
 
-#[derive(Fail, Debug)]
-enum AppError {
-    #[fail(display = "Invalid Object Id")]
-    InvalidObjectId,
-    #[fail(display = "ObjectId Not Found")]
-    ObjectIdNotFound,
-    #[fail(display = "Document doesn't have expected structure")]
-    CorruptDocument,
-}
-
-impl error::ResponseError for AppError {
-    fn error_response(&self) -> HttpResponse {
-        match *self {
-            AppError::InvalidObjectId => HttpResponse::new(http::StatusCode::BAD_REQUEST),
-            AppError::ObjectIdNotFound => HttpResponse::new(http::StatusCode::NOT_FOUND),
-            AppError::CorruptDocument => HttpResponse::new(http::StatusCode::INTERNAL_SERVER_ERROR),
-        }
-    }
-}
-
-fn get_base_template(
-    hs: &'static HashMap<ObjectId, Document>,
-    oid: &str,
-) -> Result<BaseTemplate, AppError> {
-    let oid = ObjectId::with_string(oid).map_err(|_e| AppError::InvalidObjectId)?;
-    let doc = hs.get(&oid).ok_or(AppError::ObjectIdNotFound)?;
-    let bt = match (doc.get_object_id("_id"), doc.get_str("name")) {
-        (Ok(oid), Ok(name)) => Ok(BaseTemplate {
-            id: oid.to_string(),
-            name: name.to_string(),
-        }),
-        (_, _) => Err(AppError::CorruptDocument),
-    };
-    bt
-}
-
-#[derive(Serialize, Debug, Clone)]
-struct BaseTemplate {
-    id: String, // Move them to references
-    name: String,
-}
-
-impl Responder for BaseTemplate {
-    type Item = HttpResponse;
-    type Error = actix_web::Error;
-
-    fn respond_to<S>(self, _req: &HttpRequest<S>) -> Result<HttpResponse> {
-        let body = serde_json::to_string(&self)?;
-        Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body))
-    }
-}
+mod actors;
+mod errors;
+use actors::base_templates::{get_base_template, BaseTemplate};
+use errors::app_errors::AppError;
 
 fn find_and_return(
     hs: &'static HashMap<ObjectId, Document>,

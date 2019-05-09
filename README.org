@@ -1,3 +1,5 @@
 * Http-bson (WIP)
 ** Goals
    - Provide a graphql interface over bson files
+** Useful Resources
+   - [[https://github.com/fairingrey/actix-realworld-example-app][Actix real world example]]

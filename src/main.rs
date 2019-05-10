@@ -18,6 +18,7 @@ mod errors;
 
 // Sample: 57d0c3f3f6cd4530aa50ea18
 fn main() -> () {
+    let sys = actix::System::new("http-bson");
     let mut listenfd = ListenFd::from_env();
     lazy_static! {
         static ref HASHMAP: HashMap<ObjectId, Document> = {
@@ -38,5 +39,6 @@ fn main() -> () {
     } else {
         server.bind("127.0.0.1:8088").unwrap()
     };
-    server.run();
+    server.start();
+    let _ = sys.run();
 }

@@ -1,5 +1,5 @@
 use crate::errors::app_errors::AppError;
-use actix::prelude::*;
+use actix::prelude::{Actor, Handler, Message, SyncContext};
 use actix_web;
 use actix_web::error::Result;
 use actix_web::{HttpRequest, HttpResponse, Responder};
@@ -7,28 +7,28 @@ use bson::oid::ObjectId;
 use bson::Document;
 use im::hashmap::HashMap;
 
-// struct Ping(usize);
+struct Ping(usize);
 
-// impl Message for Ping {
-//     type Result = usize;
-// }
+impl Message for Ping {
+    type Result = usize;
+}
 
-// struct BaseTemplatesActor {
-//     count: usize,
-// }
+pub struct BaseTemplatesActor {
+    pub count: usize,
+}
 
-// impl Actor for BaseTemplatesActor {
-//     type Context = Context<Self>;
-// }
+impl Actor for BaseTemplatesActor {
+    type Context = SyncContext<Self>;
+}
 
-// impl Handler<Ping> for BaseTemplatesActor {
-//     type Result = usize;
+impl Handler<Ping> for BaseTemplatesActor {
+    type Result = usize;
 
-//     fn handle(&mut self, msg: Ping, _: &mut Context<Self>) -> Self::Result {
-//         self.count += msg.0;
-//         self.count
-//     }
-// }
+    fn handle(&mut self, msg: Ping, _: &mut SyncContext<Self>) -> Self::Result {
+        self.count += msg.0;
+        self.count
+    }
+}
 
 #[derive(Serialize, Debug, Clone)]
 pub struct BaseTemplate {

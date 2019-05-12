@@ -3,3 +3,6 @@
    - Provide a graphql interface over bson files
 ** Useful Resources
    - [[https://github.com/fairingrey/actix-realworld-example-app][Actix real world example]]
+** Lessons Learned
+   - actix-web and actix don't have compatible latest releases. You
+     have to handpick versions.

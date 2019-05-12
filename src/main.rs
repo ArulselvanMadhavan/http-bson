@@ -18,8 +18,7 @@ mod errors;
 
 // Sample: 57d0c3f3f6cd4530aa50ea18
 fn main() -> () {
-    let sys = actix::System::new("http-bson");
-    let mut listenfd = ListenFd::from_env();
+    // let mut listenfd = ListenFd::from_env();
     lazy_static! {
         static ref HASHMAP: HashMap<ObjectId, Document> = {
             let mut f = File::open("samples/base_templates.bson").unwrap();
@@ -32,13 +31,16 @@ fn main() -> () {
             hs
         };
     }
-
-    let mut server = server::new(|| app::create(&HASHMAP));
-    server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
-        server.listen(l)
-    } else {
-        server.bind("127.0.0.1:8088").unwrap()
-    };
-    server.start();
+    let sys = actix::System::new("http-bson");
+    let server = server::new(|| app::create(&HASHMAP))
+        .bind("127.0.0.1:8088")
+        .unwrap_or_else(|_| panic!("Could not bind to address"))
+        .start();
     let _ = sys.run();
+    // server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
+    //     server.listen(l)
+    // } else {
+    //     server.bind("127.0.0.1:8088").unwrap()
+    // };
+    // server.start();
 }

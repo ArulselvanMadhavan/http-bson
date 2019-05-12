@@ -1,22 +1,31 @@
-use crate::actors::base_templates::{get_base_template, BaseTemplate, BaseTemplatesActor};
+use crate::actors::base_templates::{
+    get_base_template, ping_and_respond, BaseTemplate, BaseTemplatesActor,
+};
 use crate::errors::app_errors::AppError;
 use actix::prelude::Addr;
 use actix::sync::SyncArbiter;
-use actix_web::{App, Path};
+use actix_web::{App, HttpRequest, Path};
 use bson::oid::ObjectId;
 use bson::Document;
 use im::hashmap::HashMap;
 
-fn find_and_return(
-    hs: &'static HashMap<ObjectId, Document>,
-) -> impl Fn(Path<(String, String)>) -> Result<BaseTemplate, AppError> {
-    move |info| get_base_template(hs, info.1.as_str())
+pub struct AppState {
+    pub bt: Addr<BaseTemplatesActor>,
 }
 
-pub fn create(hs: &'static HashMap<ObjectId, Document>) -> App {
+pub fn create(hs: &'static HashMap<ObjectId, Document>) -> App<AppState> {
     let bt_address: Addr<BaseTemplatesActor> =
         SyncArbiter::start(1, || BaseTemplatesActor { count: 0 });
-    App::new().resource("/{collectionName}/${id}", move |r| {
-        r.with(find_and_return(hs))
-    })
+    let state = AppState {
+        bt: bt_address.clone(),
+    };
+    App::with_state(state)
+        .resource("/{collectionName}/ping", move |r| {
+            r.with_async(ping_and_respond)
+        })
+        .resource("/base_templates/{id}", move |r| {
+            r.with_async(move |(info, req): (Path<String>, HttpRequest<AppState>)| {
+                get_base_template(hs, info.as_str(), req)
+            })
+        })
 }
